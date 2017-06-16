@@ -9,7 +9,7 @@ fun same_string(s1 : string, s2 : string) =
 (* put your solutions for problem 1 here *)
 fun all_except_option(str : string, str_list : string list) =
    let fun all_except_option_helper(dest : string, origin_list : string list, result : string list) = 
-    case str_list of
+    case origin_list of
          [] => NONE
         | head::str_tail => if same_string(dest, head) then SOME (result@str_tail)  else  all_except_option_helper(dest, str_tail,head::result)
    in
@@ -27,6 +27,36 @@ fun get_substitutions1(subs_list : string list list, str : string) =
                    get_substitutions1(subs_list_tail, str)
             end
 
+fun get_substitutions2(subs_list : string list list, str : string) =
+     let fun get_substitutions_helper(subs_helper_list : string list list, str_helper : string, acc: string list) = 
+     case subs_helper_list of
+     [] => acc
+    | head::subs_list_tail =>
+          let 
+              val sub = all_except_option(str, head)
+          in
+              if isSome sub then get_substitutions_helper(subs_list_tail, str_helper,acc@(valOf sub))
+              else
+                  get_substitutions_helper(subs_list_tail, str_helper, acc)
+          end
+     in
+         get_substitutions_helper(subs_list, str, [])
+     end
+         
+fun similar_names(origin_name_list : string list list, full_name: {first:string,middle:string,last:string}) =
+       let 
+           val name_list = (#first full_name)::get_substitutions2(origin_name_list, #first full_name)
+		   fun similar_names_helper(helper_name_list : string list, helper_full_name : {first:string, middle:string, last:string}) =  
+              case helper_name_list of
+                   [] => []
+                   | name::name_list_tail =>
+                             {first=name, last=(#last helper_full_name), middle=(#middle helper_full_name)}::similar_names_helper(name_list_tail,helper_full_name)
+       in
+         similar_names_helper(name_list,full_name)
+       end
+
+
+
 (* you may assume that Num is always used with values 2, 3, ..., 10
    though it will not really come up *)
 datatype suit = Clubs | Diamonds | Hearts | Spades
@@ -39,3 +69,17 @@ datatype move = Discard of card | Draw
 exception IllegalMove
 
 (* put your solutions for problem 2 here *)
+
+fun card_color(card_suit : suit, card_rank : rank) = 
+    case card_suit of
+		Clubs => Black
+      | Spades => Black
+      | Diamonds => Red
+      | Hearts => Red
+
+fun card_value(card_suit : suit, card_rank : rank) =
+    case card_rank of
+        Num i => i
+      | Ace => 11
+      | _ => 10
+
