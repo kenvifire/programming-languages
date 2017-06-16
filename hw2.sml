@@ -83,3 +83,18 @@ fun card_value(card_suit : suit, card_rank : rank) =
       | Ace => 11
       | _ => 10
 
+fun remove_card(cs : card list, c : card, e) =
+    let 
+       fun remove_card_helper(cs_helper : card list, c_helper : card, e_helper, acc : card list) = 
+            case cs_helper of
+      			[] => raise e_helper
+              | cs_head::cs_tail =>
+                      if cs_head = c_helper 
+                      then
+                         acc@cs_tail
+                      else
+                         remove_card_helper(cs_tail,c_helper,e, acc@(cs_head::[]))
+     in
+        remove_card_helper(cs,c,e,[])
+     end
+               
