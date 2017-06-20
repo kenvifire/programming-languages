@@ -97,4 +97,37 @@ fun remove_card(cs : card list, c : card, e) =
      in
         remove_card_helper(cs,c,e,[])
      end
-               
+
+fun all_same_color(cs : card list) =
+    case cs of
+       [] => true
+       | c::[] => true
+       | c1::c2::[] => card_color(c1) = card_color(c2)
+       | c1::c2::cs_tail =>
+          if card_color(c1) = card_color(c2)
+          then
+              all_same_color(c2::cs_tail)
+          else
+              false
+
+fun sum_cards(cs : card list) = 
+     let 
+       fun sum_cards_helper(cs_helper: card list, acc : int) = 
+          case cs_helper of 
+              [] => acc
+             | xs::tail =>  sum_cards_helper(tail, acc + card_value(xs) )
+     in
+       sum_cards_helper(cs, 0)
+     end
+
+fun score(cs : card list, goal : int) = 
+	let 
+        val init_sum = sum_cards(cs)
+        val same = all_same_color(cs)
+	in
+      if init_sum > goal
+      then
+          if same then 3*(init_sum - goal) div 2 else 3*(init_sum-goal)
+      else 
+         if same then (goal - init_sum) div 2 else (goal -init_sum)
+    end
