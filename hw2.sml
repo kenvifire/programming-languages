@@ -131,3 +131,36 @@ fun score(cs : card list, goal : int) =
       else 
          if same then (goal - init_sum) div 2 else (goal -init_sum)
     end
+
+fun officiate(cs : card list, mv : move list, goal : int) = 
+    let
+       fun officiate_helper(cs_helper : card list, mv_helper: move list, held_cards : card list, goal_helper : int) =
+           case mv_helper of
+               [] => score(held_cards, goal_helper)
+             | m::mv_tail =>
+                 case m of
+                     Discard(c) => officiate_helper(cs_helper, mv_tail, remove_card(held_cards,c,IllegalMove ),goal_helper)
+                    | Draw =>
+                          if null cs_helper 
+                          then 
+							score(held_cards, goal_helper) 
+                         else 
+                            let 
+                                val sum_value = sum_cards((hd cs_helper)::held_cards)
+                            in
+                               if sum_value > goal_helper 
+                               then
+                                  score((hd cs_helper)::held_cards, goal_helper)
+                               else
+                                  officiate_helper(tl cs_helper, mv_tail, (hd cs_helper)::held_cards, goal_helper)
+                          end
+
+                     
+                        
+                  
+    in
+        officiate_helper(cs,mv,[],goal)
+    end
+                   
+       
+           
