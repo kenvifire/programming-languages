@@ -22,9 +22,9 @@ fun get_substitutions1(subs_list : string list list, str : string) =
        | head::subs_list_tail =>
             let val sub = all_except_option(str,head) 
             in
-                if isSome sub then (valOf sub)@get_substitutions1(subs_list_tail, str) 
-                else
-                   get_substitutions1(subs_list_tail, str)
+                case sub of
+                   SOME sub_val => sub_val@get_substitutions1(subs_list_tail, str) 
+                 | NONE =>get_substitutions1(subs_list_tail, str)
             end
 
 fun get_substitutions2(subs_list : string list list, str : string) =
@@ -35,25 +35,27 @@ fun get_substitutions2(subs_list : string list list, str : string) =
           let 
               val sub = all_except_option(str, head)
           in
-              if isSome sub then get_substitutions_helper(subs_list_tail, str_helper,acc@(valOf sub))
-              else
-                  get_substitutions_helper(subs_list_tail, str_helper, acc)
+              case sub of
+                 SOME sub_val => get_substitutions_helper(subs_list_tail, str_helper,acc@sub_val)
+                | NONE => get_substitutions_helper(subs_list_tail, str_helper, acc)
           end
      in
          get_substitutions_helper(subs_list, str, [])
      end
          
 fun similar_names(origin_name_list : string list list, full_name: {first:string,middle:string,last:string}) =
-       let 
-           val name_list = (#first full_name)::get_substitutions2(origin_name_list, #first full_name)
-		   fun similar_names_helper(helper_name_list : string list, helper_full_name : {first:string, middle:string, last:string}) =  
-              case helper_name_list of
-                   [] => []
-                   | name::name_list_tail =>
-                             {first=name, last=(#last helper_full_name), middle=(#middle helper_full_name)}::similar_names_helper(name_list_tail,helper_full_name)
-       in
-         similar_names_helper(name_list,full_name)
-       end
+       case full_name of
+           {first=first_name, middle=middle_name, last = last_name} => 
+           let 
+               val name_list = first_name::get_substitutions2(origin_name_list, first_name)
+		       fun similar_names_helper(helper_name_list : string list) =  
+                  case helper_name_list of
+                       [] => []
+                       | name::name_list_tail =>
+                             {first=name, last=last_name, middle=middle_name}::similar_names_helper(name_list_tail)
+           in
+              similar_names_helper(name_list)
+           end
 
 
 
@@ -141,19 +143,18 @@ fun officiate(cs : card list, mv : move list, goal : int) =
                  case m of
                      Discard(c) => officiate_helper(cs_helper, mv_tail, remove_card(held_cards,c,IllegalMove ),goal_helper)
                     | Draw =>
-                          if null cs_helper 
-                          then 
-							score(held_cards, goal_helper) 
-                         else 
-                            let 
-                                val sum_value = sum_cards((hd cs_helper)::held_cards)
-                            in
-                               if sum_value > goal_helper 
-                               then
-                                  score((hd cs_helper)::held_cards, goal_helper)
+                          case cs_helper of
+							 [] => score(held_cards, goal_helper) 
+                            | cs_hd::cs_helper_tail => 
+                                let 
+                                    val sum_value = sum_cards(cs_hd::held_cards)
+                                in
+                                   if sum_value > goal_helper 
+                                   then
+                                      score(cs_hd::held_cards, goal_helper)
                                else
-                                  officiate_helper(tl cs_helper, mv_tail, (hd cs_helper)::held_cards, goal_helper)
-                          end
+                                  officiate_helper(cs_helper_tail, mv_tail, cs_hd::held_cards, goal_helper)
+                              end
 
                      
                         
